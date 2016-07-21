@@ -1,0 +1,27 @@
+{
+  "name": "node-steamlytics",
+  "version": "1.0.0",
+  "description": "A module for interacting with the Steamlytics API",
+  "main": "steamlytics.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rock48/node-steamlytics.git"
+  },
+  "keywords": [
+    "csgo",
+    "steamlytics",
+    "counter-strike",
+    "steam",
+    "market",
+    "prices"
+  ],
+  "author": "Rock",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Rock48/node-steamlytics/issues"
+  },
+  "homepage": "https://github.com/Rock48/node-steamlytics#readme"
+}
