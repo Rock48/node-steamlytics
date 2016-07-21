@@ -23,5 +23,8 @@
   "bugs": {
     "url": "https://github.com/Rock48/node-steamlytics/issues"
   },
-  "homepage": "https://github.com/Rock48/node-steamlytics#readme"
+  "homepage": "https://github.com/Rock48/node-steamlytics#readme",
+  "dependencies": {
+    "ajax-request": "^1.2.1"
+  }
 }
