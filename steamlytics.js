@@ -4,22 +4,19 @@ var request = require('ajax-request');
 
 function getJSON(url, callback) {
 	request(url, function(err, resp, data) {
-		if(!resp.headers) {
-			callback("invalid_response");
-			return;
+		if(!resp.headers) 
+			return callback("invalid_response");
+		
+		if(resp.headers.location) 
+			return getJSON(resp.headers.location, callback);
+
+		var parsed_data;
+		try {
+			parsed_data = JSON.parse(data);
+		} catch(e) {
+			parsed_data = {success: false, message: "There was an error parsing the response from steamlytics, their servers may be down.", exception: e};
 		}
-		if(resp.headers.location) {
-			getJSON(resp.headers.location, callback);
-		} else {
-			var callback_arg = {};
-			try {
-				var d_parsed = JSON.parse(data);
-				callback_arg = d_parsed;
-			} catch(e) {
-				callback_arg = {success: false, message: "There was an error parsing the response from steamlytics, their servers may be down.", exception: e};
-			}
-			callback(callback_arg);
-		}
+		return callback(d_parsed);
 	});
 }
  
@@ -32,7 +29,7 @@ function getJSON(url, callback) {
 function Steamlytics(apiKey, readyCallback) {
 	this.apiKey = apiKey;
 	this.apiLevel = 0;
-	this.ready = false;
+	this.ready = false; 
 	var csgo = {};
 
 	/**
@@ -41,11 +38,10 @@ function Steamlytics(apiKey, readyCallback) {
 	 */
 	csgo.account = (callback) => {
 		getJSON(`http://api.steamlytics.xyz/v1/account?key=${this.apiKey}`, (data) => {
-			if(data.success) {
-				callback(null, data);
-			} else {
-				callback(new SteamlyticsError(data.message), {});
-			}
+			if(data.success) 
+				return callback(null, data);
+			
+			return callback(new SteamlyticsError(data.message), {});
 		})
 	}
 
@@ -56,21 +52,20 @@ function Steamlytics(apiKey, readyCallback) {
 	 * @param {function(SteamlyticsError, Array<Object>)} callback The function to be called when the api call is complete.
 	 */
 	csgo.pricelist = (currency, callback) => {
-		if(typeof currency == 'function') {
-			var currencyURL = ``;
-			callback = currency;
-		} else {
-			var currencyURL = `&currency=${currency}`;
-		}
-		if(this.apiLevel < 2) {
-			return callback([]);
-		}
+		if(this.apiLevel < 2) 
+			return callback(new SteamlyticsError("API Level Insufficient"), []);
+
+		var isCallbackFirst = typeof currency == 'function';
+
+		callback = isCallbackFirst ? currency : callback;
+		var currencyURL = isCallbackFirst ? `` : `&currency=${currency}`;
+
+
 		getJSON(`http://api.csgo.steamlytics.xyz/v2/pricelist?key=${this.apiKey}${currencyURL}`, (data) => {
-			if(data.success) {
-				callback(null, data.items);
-			} else {
-				callback(new SteamlyticsError(data.message), []);
-			}
+			if(data.success)
+				return callback(null, data.items);
+			
+			return callback(new SteamlyticsError(data.message), []);
 		});
 	}
 
@@ -83,31 +78,34 @@ function Steamlytics(apiKey, readyCallback) {
 	 */
 	csgo.prices = (market_hash_name, options, callback) => {
 		var options_str = "";
-		if(typeof options == 'function') {
-			callback = options;
-		} else {
-			if(options.from) {
-				options_str += `&from=${options.from}`;
-			}
-			if(options.to) {
-				options_str += `&to=${options.to}`;
-			}
-			if(options.on) {
-					if(options.from || options.to) {
-					throw new SteamlyticsError('May not use "from" or "to" in conjunction with "on".');
-				}
-				options_str += `&on=${options.on}`;
-			}
-			if(options.currency && this.apiLevel >= 2) {
-				options_str += `&currency=${options.currency}`;
-			}
+
+		// cuz fuck `if` statements
+		var callbackFirst = typeof options == 'function';
+		
+		callback = callbackFirst ? options : callback;
+		options = callbackFirst ? {} : options;
+
+		if(options.from)
+			options_str += `&from=${options.from}`;
+
+		if(options.to)
+			options_str += `&to=${options.to}`;
+
+		if(options.on) {
+			if(options.from || options.to)
+				throw new SteamlyticsError('May not use "from" or "to" in conjunction with "on".');
+
+			options_str += `&on=${options.on}`;
 		}
+
+		if(options.currency && this.apiLevel >= 2)
+			options_str += `&currency=${options.currency}`;
+		
 		getJSON(`http://api.csgo.steamlytics.xyz/v1/prices/${market_hash_name}?key=${this.apiKey}${options_str}`, (data) => {
-			if(data.success) {
+			if(data.success) 
 				callback(null, data);
-			} else {
+			else 
 				callback(new SteamlyticsError(data.message), {});
-			}
 		});
 	}
 	/**
@@ -117,11 +115,10 @@ function Steamlytics(apiKey, readyCallback) {
 	 */
 	csgo.items = (callback) => {
 		getJSON(`http://api.csgo.steamlytics.xyz/v1/items?key=${this.apiKey}`, (data) => {
-			if(data.success) {
-				callback(null, {num_items: data.num_items, items:data.items});
-			} else {
-				callback(new SteamlyticsError(data.message), {num_items: 0, items: []});
-			}
+			if(data.success)
+				return callback(null, {num_items: data.num_items, items:data.items});
+			
+			return callback(new SteamlyticsError(data.message), {num_items: 0, items: []});
 		});
 	}
 	/**
@@ -131,34 +128,31 @@ function Steamlytics(apiKey, readyCallback) {
 	 * @param {function(SteamlyticsError, {rank: number, market_hash_name: string, volume: number}[])} callback The callback for when the API call is complete. See the api docs at http://csgo.steamlytics.xyz/api for more details.
 	 */
 	csgo.popular = (limit, callback) => {
-		var limit_str = ``;
-		if(typeof limit == 'function') {
-			callback = limit;
-		} else {
-			limit_str = `&limit=${limit}`;
-		}
+
+		var callbackFirst = typeof limit == 'function';
+		
+		callback = callbackFirst ? limit : callback;
+		var limit_str = callbackFirst ? `` : `&limit=${limit}`;
+		
 		getJSON(`http://api.csgo.steamlytics.xyz/v1/items/popular?key=${this.apiKey}${limit_str}`, (data) => {
-			if(data.success) {
-				callback(null, data.items);
-			} else {
-				callback(new SteamlyticsError(data.message), []);
-			}
+			if(data.success)
+				return callback(null, data.items);
+			
+			return callback(new SteamlyticsError(data.message), []);
 		});
 	}
 
 	csgo.account((err, data) => {
-		if(!err) {
-			this.apiLevel = data.api_plan;
-			this.ready = true;
-			readyCallback(this, data);
-		} else {
+		if(err)
 			throw err;
-		}
+		
+		this.apiLevel = data.api_plan;
+		this.ready = true;
+		return readyCallback(this, data);
 	})
 
 	this.csgo = csgo;
 }
-
 
 class SteamlyticsError {
 	constructor(message) {
