@@ -1,4 +1,4 @@
-"use strict";
+"use strict"; 
 
 var request = require('ajax-request');
 
@@ -130,7 +130,7 @@ function Steamlytics(apiKey, readyCallback) {
 	 * @param {number} [limit] (optional) The limit for how many results to return
 	 * @param {function(SteamlyticsError, {rank: number, market_hash_name: string, volume: number}[])} callback The callback for when the API call is complete. See the api docs at http://csgo.steamlytics.xyz/api for more details.
 	 */
-	var popular = (limit, callback) => {
+	csgo.popular = (limit, callback) => {
 		var limit_str = ``;
 		if(typeof limit == 'function') {
 			callback = limit;
