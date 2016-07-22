@@ -16,7 +16,7 @@ function getJSON(url, callback) {
 		} catch(e) {
 			parsed_data = {success: false, message: "There was an error parsing the response from steamlytics, their servers may be down.", exception: e};
 		}
-		return callback(d_parsed);
+		return callback(parsed_data);
 	});
 }
  
@@ -53,7 +53,7 @@ function Steamlytics(apiKey, readyCallback) {
 	 */
 	csgo.pricelist = (currency, callback) => {
 		if(this.apiLevel < 2) 
-			return callback(new SteamlyticsError("API Level Insufficient"), []);
+			return callback(new SteamlyticsError("Pro Plan Required"), []);
 
 		var isCallbackFirst = typeof currency == 'function';
 
@@ -127,7 +127,7 @@ function Steamlytics(apiKey, readyCallback) {
 	 * @param {number} [limit] (optional) The limit for how many results to return
 	 * @param {function(SteamlyticsError, {rank: number, market_hash_name: string, volume: number}[])} callback The callback for when the API call is complete. See the api docs at http://csgo.steamlytics.xyz/api for more details.
 	 */
-	csgo.popular = (limit, callback) => {
+	csgo.items.popular = (limit, callback) => {
 
 		var callbackFirst = typeof limit == 'function';
 		
@@ -142,6 +142,12 @@ function Steamlytics(apiKey, readyCallback) {
 		});
 	}
 
+	/** @depricated */
+	csgo.popular = (limit, callback) => {
+		console.warn("csgo.popular() is depricated, please use csgo.items.popular");
+		return csgo.items.popular(limit, callback);
+	}
+
 	csgo.account((err, data) => {
 		if(err)
 			throw err;
@@ -152,6 +158,132 @@ function Steamlytics(apiKey, readyCallback) {
 	})
 
 	this.csgo = csgo;
+
+	var steam = {};
+
+	/**
+	 * Gets the list of currencies Steamlytics has encountered on the community market
+	 * 
+	 * @param {function(SteamlyticsError, Object)} callback The callback for when the API call is complete. The returned object is the table of currencies. See the docs at http://steam.steamlytics.xyz/api for details.
+	 */
+	steam.currencies = (callback) => {
+		getJSON(`http://api.steam.steamlytics.xyz/v1/currencies/?key=${this.apiKey}`, (data) => {
+			if(data.success)
+				return callback(null, data.currencies);
+			
+			return callback(new SteamlyticsError(data.message), {});
+		})
+	}
+
+	/**
+	 * Returns a table of exchange rates for the current day, based on the base currency ID. The base currency will always be shown in the table with an exchange rate of 1.
+	 * 
+	 * @param {Object} options The options for the call, see the docs at http://steam.steamlytics.xyz/api for details.
+	 * @param {function(SteamlyticsError, Object)} callback The callback for when the API call is complete. The returned object is the table of exchange rates relative to the base. 
+	 */
+	steam.currencies.latest = (options, callback) => {
+		var callbackFirst = typeof options == 'function';
+		
+		callback = callbackFirst ? options : callback;
+		options = callbackFirst ? {} : options;
+
+		var options_str = ``;
+
+		if(options.base)
+			options_str += `&base=${options_base}`;
+
+		if(options.currencies) {
+			if(!options.currencies instanceof Array) 
+				throw new SteamlyticsError("options.currencies must be an Array");
+				
+			var currenciesStr = "";
+
+			options.currencies.forEach((element, index) => {
+				if(index != 0) 
+					currenciesStr += ",";
+				currenciesStr += element;
+			});
+
+			options_str += `&currencies=${currenciesStr}`;
+		}
+
+		getJSON(`http://api.steam.steamlytics.xyz/v1/currencies/latest/?key=${this.apiKey}${options_str}`, (data) => {
+			if(data.success) 
+				return callback(null, data.rates);
+			
+			return callback(new SteamlyticsError(data.message), {});
+		});
+	}
+
+	/**
+	 * Returns a table of exchange rates for the given date (YYYY-MM-DD), based on the base currency ID. The base currency will always be shown in the table with an exchange rate of 1.
+	 * 
+	 * This API call is pro plan and up only.
+	 * 
+	 * @param {Object} options The options for the call, see the docs at http://steam.steamlytics.xyz/api for details.
+	 * @param {function(SteamlyticsError, Object)} callback The callback for when the API call is complete. The returned object is the table of exchange rates relative to the base. 
+	 */
+	steam.currencies.historical = (date, options, callback) => {
+		if(this.apiLevel < 2) 
+			return callback(new SteamlyticsError("Pro Plan Required"), {});
+
+		if(!date.match(/\d{4}-(01|02|03|04|05|06|07|08|09|10|11|12)-(01|02|03|04|05|06|07|08|09|10|11|12|12|13|14|15|16|17|18|19|20|21|22|23|24|25|26|27|28|29|30|31)/))
+			return callback(new SteamlyticsError("Malformed date, must be in format YYYY-MM-DD"), {});			
+
+		var callbackFirst = typeof options == 'function';
+		
+		callback = callbackFirst ? options : callback;
+		options = callbackFirst ? {} : options;
+
+		var options_str = ``;
+
+		if(options.base)
+			options_str += `&base=${options_base}`;
+
+		if(options.currencies) {
+			if(!options.currencies instanceof Array) 
+				throw new SteamlyticsError("options.currencies must be an Array");
+				
+			var currenciesStr = "";
+
+			options.currencies.forEach((element, index) => {
+				if(index != 0) 
+					currenciesStr += ",";
+				currenciesStr += element;
+			});
+
+			options_str += `&currencies=${currenciesStr}`;
+		}
+		getJSON(`http://api.steam.steamlytics.xyz/v1/currencies/historical/${date}?key=${this.apiKey}${options_str}`, (data) => {
+			if(data.success) 
+				return callback(null, data.rates);
+			
+			return callback(new SteamlyticsError(data.message), {});
+		});
+	}
+
+	/**
+	 * Converts an amount from one currency to another. The response will also give you the exchange rate from the first currency to the second currency.
+	 * 
+	 * @param {number} amount The amount of currency to convert
+	 * @param {number|string} from_id The id to convert from
+	 * @param {number|string} to_id The id to convert to
+	 * @param {function(SteamlyticsError, {amount:number, rate:number})} callback The callback response from this api call. Includes the amount and the rate.
+	 */
+	steam.currencies.convert = (amount, from_id, to_id, callback) => {
+		if(this.apiLevel < 3) 
+			return callback(new SteamlyticsError("Enterprise Plan Required"), {});
+		
+		getJSON(`http://api.steam.steamlytics.xyz/v1/currencies/convert/${amount}/${from_id}/${to_id}?key=${this.apiKey}`, (data) => {
+			if(data.success) 
+				return callback(null, {rate: data.rate, amount: data.amount});
+			
+			return callback(new SteamlyticsError(data.message), {});
+		})
+		
+	}
+
+	this.steam = steam;
 }
 
 class SteamlyticsError {
