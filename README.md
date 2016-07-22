@@ -12,8 +12,8 @@ It's extremely simple to use node-steamlytics. Every function corresponds with a
 
 	"use strict";
 
-	var SteamlyticsAPI = require("node-steamlytics").API;
-	var steamlytics = new SteamlyticsAPI("myAPIKeyHere", (api, account) => { // function called when API ready
+	var SteamlyticsCSGOAPI = require("node-steamlytics").CSGO;
+	var steamlyticsCSGO = new SteamlyticsCSGOAPI("myAPIKeyHere", (api, account) => { // function called when API ready
 		api.prices("AWP | Dragon Lore (Factory New)", (data) => {
 			console.log(`DLore Price: $${data.median_price}`);
 		});
@@ -25,8 +25,8 @@ Which, at the time of writing, would output:
 
 Shitty Documentation
 ---------------------
-	steamlytics.account(callback) // Gets account information associated with the API key.
-	steamlytics.pricelist(callback, currency) // Gets the /v2/pricelist, see the Steamlytics api reference for currency details. The default is "$". The callback argument is the items array, or an empty array if your API level is not sufficient.
-	steamlytics.prices(market_hash_name, callback, options) // Gets the price of an item, options is an object that may contain parameters for the call. See the API reference for details.
-	steamlytics.items(callback) // Gets the list of items in the database. Callback arguments should be (num_items, items[]). See API reference for details.
-	steamlytics.popular(callback, limit) // Gets popular item list. The callback argument is the array of items
+	steamlyticsCSGO.account(callback) // Gets account information associated with the API key.
+	steamlyticsCSGO.pricelist(callback, currency) // Gets the /v2/pricelist, see the Steamlytics api reference for currency details. The default is "$". The callback argument is the items array, or an empty array if your API level is not sufficient.
+	steamlyticsCSGO.prices(market_hash_name, callback, options) // Gets the price of an item, options is an object that may contain parameters for the call. See the API reference for details.
+	steamlyticsCSGO.items(callback) // Gets the list of items in the database. Callback arguments should be (num_items, items[]). See API reference for details.
+	steamlyticsCSGO.popular(callback, limit) // Gets popular item list. The callback argument is the array of items

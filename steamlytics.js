@@ -171,6 +171,6 @@ class SteamlyticsError {
 	}
 }
 
-exports.API = Steamlytics;
+exports.CSGO = Steamlytics;
 
 exports.SteamlyticsError = SteamlyticsError;
