@@ -27,6 +27,19 @@ DLore Price: $1252.50
 ```
 ## Documentation
 All function callbacks are formatted as `callback(error, data)`, where `error` is either null (if there's no error) or a throwable instance of `SteamlyticsError` which contains a message about what went wrong with the API call.
+The module also supports promises, so callbacks are optional. The example above can be re-written as
+```js
+"use strict";
+
+var SteamlyticsAPI = require("node-steamlytics").API;
+var steamlytics = new SteamlyticsAPI("myAPIKeyHere", (api, account) => { // the constructor does not support promises, for obvious reasons.
+	api.csgo.prices("AWP | Dragon Lore (Factory New)").then((data) => {
+		console.log(`DLore Price: $${data.median_price}`);
+	}).error((err) => {
+		// Handle error	
+	};
+});
+```
 
 ### Function reference
 

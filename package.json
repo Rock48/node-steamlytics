@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/Rock48/node-steamlytics#readme",
   "dependencies": {
-    "ajax-request": "^1.2.1"
+    "ajax-request": "^1.2.1",
+    "bluebird": "^3.4.1"
   }
 }
