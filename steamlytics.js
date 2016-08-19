@@ -143,6 +143,7 @@ function Steamlytics(apiKey, readyCallback) {
 	 * @param {function(SteamlyticsError, {num_items:number, items:Object[]})} callback the function to be called when the api call is complete. See the api docs at http://csgo.steamlytics.xyz/api for more details.
 	 */
 	csgo.items = (callback) => {
+		callback = checkCallback(callback);
 		return new Promise((resolve, reject) => {
 			getJSON(`http://api.csgo.steamlytics.xyz/v1/items?key=${this.apiKey}`, (data) => {
 				if(data.success) {
