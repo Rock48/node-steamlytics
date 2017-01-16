@@ -25,7 +25,7 @@ function getJSON(url, callback) {
 /**
  * Constructs a new Steamlytics object used to interact with the Steamlytics API. A test call is made when the object is constructed.
  * @param {string} apiKey The API key used in order to make calls to the Steamlytics API.
- * @param {function(Steamlytics, {api_plan:number, subscription_ends_at:number, calls_this_minute:number, calls_today:number})} readyCallback Callback is run when test call is complete and api is ready to be used, the argument is the api object.
+ * @param {function(Steamlytics, {api_plan:number, subscription_ends_at:number, calls_this_minute:number, calls_today:number}, SteamlyticsError)} readyCallback Callback is run when test call is complete and api is ready to be used, the argument is the api object.
  */
 function Steamlytics(apiKey, readyCallback) {
 	this.apiKey = apiKey;
@@ -346,8 +346,10 @@ function Steamlytics(apiKey, readyCallback) {
 	this.steam = steam;
 
 	csgo.account((err, data) => {
-		if(err)
-			throw err;
+		if(err) {
+			readyCallback(null, null, err);
+			return;
+		}
 			
 		this.apiLevel = data.api_plan;
 		this.ready = true;
