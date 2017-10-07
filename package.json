@@ -1,6 +1,6 @@
 {
   "name": "node-steamlytics",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "A module for interacting with the Steamlytics API",
   "main": "steamlytics.js",
   "scripts": {
