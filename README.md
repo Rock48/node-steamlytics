@@ -32,7 +32,8 @@ The module also supports promises, so callbacks are optional. The example above 
 "use strict";
 
 var SteamlyticsAPI = require("node-steamlytics").API;
-var steamlytics = new SteamlyticsAPI("myAPIKeyHere", (api, account) => { // the constructor does not support promises, for obvious reasons.
+var steamlytics = new SteamlyticsAPI("myAPIKeyHere", (api, account, error) => { // the constructor does not support promises, for obvious reasons.
+	if(error) return; // handle error
 	api.csgo.prices("AWP | Dragon Lore (Factory New)").then((data) => {
 		console.log(`DLore Price: $${data.median_price}`);
 	}).error((err) => {
